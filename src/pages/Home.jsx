@@ -146,6 +146,9 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="mt-20 py-10 border-t border-zinc-100 dark:border-zinc-800 text-center">
         <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">© 2026 CafeConnect System</p>
+        <Link to="/CustomerDashboard">Customer</Link>
+        <Link to="/ManagerDashboard">Manager</Link>
+        <Link to="/Register">Register</Link>
       </footer>
     </div>
   );
