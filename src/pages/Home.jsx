@@ -1,8 +1,8 @@
-import React from "react";
-import { Link,useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-// --- Animation Variants (Matching Dashboard Style) ---
+// --- Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { 
@@ -10,7 +10,6 @@ const containerVariants = {
     transition: { staggerChildren: 0.15, delayChildren: 0.2 } 
   }
 };
-
 
 const itemVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.98 },
@@ -24,22 +23,70 @@ const itemVariants = {
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  
+  // 1. Initialize state directly from storage for the first render
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
 
-  const handleStartOrdering = () => {
-    const customer = localStorage.getItem("customer");
+  // 2. FIX: Effect to sync state on mount and listen for storage changes
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      setIsLoggedIn(!!token);
+      setUserRole(role);
+    };
+
+    // Check immediately on mount
+    checkAuth();
+
+    // Listen for changes (useful if login happens in another tab or via a specific redirect)
+    window.addEventListener("storage", checkAuth);
+    return () => window.removeEventListener("storage", checkAuth);
+  }, []);
+
+  // --- Handlers ---
+  const handleLogout = () => {
+    localStorage.clear(); 
+    setIsLoggedIn(false);
+    setUserRole(null);
+    navigate("/");
+  };
+
+  const handleAccountNavigation = () => {
+    // 1. Get the values directly from storage right now
+    const token = localStorage.getItem("token");
     
-    if (customer) {
-      // If logged in, go to the menu or dashboard
-      navigate("/menu");
+    // 2. Check for both "role" and "Role" just in case your backend uses a capital letter
+    const role = localStorage.getItem("role") || localStorage.getItem("Role");
+
+    console.log("Debug - Token exists:", !!token);
+    console.log("Debug - Role found:", role);
+
+    if (!token) {
+      console.log("Redirecting to login because no token found");
+      navigate("/Login");
+      return;
+    }
+
+    // 3. Use .toUpperCase() to ignore case sensitivity (matches ADMIN, admin, Admin)
+    if (role && role.toUpperCase() === "ADMIN") {
+      navigate("/Admin/Dashboard");
     } else {
-      // If not logged in, go to login/signup
-      navigate("/login"); 
+      // Default to customer if it's not admin
+      navigate("/CustomerDashboard");
     }
   };
+
+  const handleStartOrdering = () => {
+    const currentToken = localStorage.getItem("token");
+    navigate(currentToken ? "/Menu" : "/Login");
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafb] dark:bg-[#0b0f1a] font-['Plus_Jakarta_Sans',_sans-serif] text-[#0d121b] dark:text-zinc-100 pb-10 transition-colors duration-300">
       
-      {/* 1. Shared Header Component */}
+      {/* 1. Header */}
       <header className="sticky top-4 z-50 w-full flex justify-center">
         <motion.div 
           initial={{ y: -20, opacity: 0 }} 
@@ -52,36 +99,49 @@ const LandingPage = () => {
             </div>
             <h2 className="text-lg font-black tracking-tighter uppercase">Chai</h2>
           </div>
-          <div className="flex items-center gap-10">
-          <nav className="hidden lg:flex items-center gap-8">
-              {[
-                { name: 'Home', path: '/' },
-                { name: 'Menu', path: '/Menu' },
-                { name: 'Order', path: '/Order' },
-                { name: 'History', path: '/History' }
-              ].map((link) => (
-                <Link 
-                  key={link.name} 
-                  to={link.path} 
-                  className="text-[11px] font-black text-zinc-500 hover:text-[#135bec] transition-all uppercase tracking-[0.15em]">
-                  {link.name}
-                </Link>
-              ))}
+
+          <div className="flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-8">
+              <Link to="/" className="text-[11px] font-black text-zinc-500 hover:text-[#135bec] transition-all uppercase tracking-[0.15em]">Home</Link>
+              <Link to="/Menu" className="text-[11px] font-black text-zinc-500 hover:text-[#135bec] transition-all uppercase tracking-[0.15em]">Menu</Link>
             </nav>
-            <Link to="/Login" className="px-6 py-2 bg-zinc-900 dark:bg-[#135bec] text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-transform hover:scale-105 active:scale-95">Login</Link>
+
+            {!isLoggedIn ? (
+              <Link to="/Login" className="px-6 py-2 bg-zinc-900 dark:bg-[#135bec] text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-transform hover:scale-105 active:scale-95">
+                Login
+              </Link>
+            ) : (
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={handleAccountNavigation}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#135bec]/10 text-[#135bec] rounded-full border border-[#135bec]/20 hover:scale-105 transition-all"
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">
+                     {userRole === 'ADMIN' ? 'admin_panel_settings' : 'person'}
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    {userRole === 'ADMIN' ? 'ADMIN PANEL' : 'ACCOUNT'}
+                  </span>
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="text-[10px] font-black uppercase text-zinc-400 hover:text-red-500 transition-colors tracking-widest"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       </header>
 
-      {/* 2. Main Content with Staggered Animations */}
+      {/* 2. Main Content */}
       <motion.main 
         variants={containerVariants} 
         initial="hidden" 
         animate="visible" 
         className="max-w-7xl mx-auto px-6 py-12"
       >
-        
-        {/* Hero Section */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-10">
           <div className="flex flex-col gap-6">
             <h1 className="text-5xl lg:text-7xl font-black tracking-tighter leading-none">
@@ -92,10 +152,15 @@ const LandingPage = () => {
               Your favorite coffee, now just a tap away. Skip the line and join the modern way to dine.
             </p>
             <div className="flex gap-4">
-              <button onClick={handleStartOrdering} className="px-8 py-4 bg-[#135bec] text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all">
+              <button 
+                onClick={handleStartOrdering}
+                className="px-8 py-4 bg-[#135bec] text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all"
+              >
                 Start Ordering
               </button>
-              <Link to="/Menu" className="px-8 py-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-bold hover:bg-zinc-50 transition-all">View Menu</Link>
+              <Link to="/Menu" className="px-8 py-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-bold hover:bg-zinc-50 transition-all">
+                View Menu
+              </Link>
             </div>
           </div>
           
@@ -127,29 +192,7 @@ const LandingPage = () => {
             </div>
           ))}
         </motion.div>
-
-        {/* Loyalty Program Call to Action */}
-        <motion.div variants={itemVariants} className="bg-zinc-900 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl">
-          <div className="relative z-10 flex flex-col items-center text-center gap-6">
-            <h2 className="text-4xl font-black tracking-tight">Ready to earn free coffee?</h2>
-            <p className="text-zinc-400 max-w-lg">Join 5,000+ happy customers already earning rewards. Get a free pastry just for signing up today!</p>
-            <button className="px-10 py-4 bg-[#135bec] rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform">
-              Join Rewards Program
-            </button>
-          </div>
-          {/* Decorative background element */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] -mr-32 -mt-32"></div>
-        </motion.div>
-
       </motion.main>
-
-      {/* Footer */}
-      <footer className="mt-20 py-10 border-t border-zinc-100 dark:border-zinc-800 text-center">
-        <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">© 2026 CafeConnect System</p>
-        <Link to="/CustomerDashboard">Customer</Link>
-        <Link to="/ManagerDashboard">Manager</Link>
-        <Link to="/Register">Register</Link>
-      </footer>
     </div>
   );
 };

@@ -8,6 +8,13 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import CustomerDashboard from './pages/CustomerDashabord.jsx'
 import Chef from './pages/ChefOrderUpdate.jsx'
+import Admin from './pages/Admin/AdminDashboard'
+import Staff from './pages/Admin/Staff.jsx'
+import CustomerManagement from './pages/Admin/Customer.jsx'
+import AdminMenu from './pages/Admin/AddMenu'
+import ActiveOrder from'./pages/Admin/ActiveOrder'
+import Waiter from './pages/Admin/Waiter'
+import AddStaff from './pages/Admin/AddStaff'
 
 export default function App() {
   return (
@@ -24,6 +31,14 @@ export default function App() {
             <Route path="/Login" element={<Login/>}/>
             <Route path="/Register" element={<Register/>}/>
             <Route path="/CustomerDashboard" element={<CustomerDashboard/>}/>
+            <Route path="/Chef" element={<Chef/>}/>
+            <Route path="/Admin/Dashboard" element={<Admin/>}/>
+            <Route path="/Admin/Staff" element={<Staff/>}/>
+            <Route path="/Admin/Customer" element={<CustomerManagement/>}/>
+            <Route path="/Admin/Menu" element={<AdminMenu/>}/>
+            <Route path="/Admin/ActiveOrder" element={<ActiveOrder/>}/>
+            <Route path="/Waiter" element={<Waiter/>}/>
+            <Route path="/Admin/AddStaff" element={<AddStaff/>}/>
           </Routes>
         </main>
 

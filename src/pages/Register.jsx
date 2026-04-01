@@ -3,20 +3,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Updated to match your Java Backend Fields
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    username: '', // This will store the email address
+    password: '', 
+    city: '' 
+  });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const response = await fetch('http://localhost:8080/Customer/Post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Success:", data);
+        alert("Registration Successful!");
+        // window.location.href = '/login';
+      } else {
+        alert(`Registration failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Could not connect to the server. Check if your Spring Boot app is running on port 8080.");
+    } finally {
       setIsLoading(false);
-      console.log("Registered:", formData);
-    }, 2000);
+    }
   };
 
   const containerVariants = {
@@ -43,7 +71,7 @@ const RegisterForm = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-[1100px] min-h-[720px] bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl flex overflow-hidden border border-zinc-100 dark:border-zinc-800 relative z-10"
+        className="w-full max-w-[1100px] min-h-[750px] bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl flex overflow-hidden border border-zinc-100 dark:border-zinc-800 relative z-10"
       >
         
         {/* Left Side (Branding) */}
@@ -72,70 +100,79 @@ const RegisterForm = () => {
         </div>
 
         {/* Right Side (Form) */}
-        <div className="w-full lg:w-[55%] p-10 md:p-20 flex flex-col justify-center">
+        <div className="w-full lg:w-[55%] p-10 md:p-16 flex flex-col justify-center">
           
-          <motion.div variants={itemVariants} className="mb-10">
+          <motion.div variants={itemVariants} className="mb-8">
             <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">Register</h1>
-            <p className="text-zinc-500 text-sm mt-2 font-medium">Create an account to manage your business.</p>
+            <p className="text-zinc-500 text-sm mt-2 font-medium">Create your business account below.</p>
           </motion.div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             
-            {/* USERNAME */}
+            {/* NAME */}
             <motion.div variants={itemVariants} className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">Username</label>
-              <div className="relative group">
-                <input
-                  name="username"
-                  type="text"
-                  placeholder="e.g. brew_master"
-                  className="w-full h-16 pl-2 pr-6 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">Full Name</label>
+              <input
+                name="name"
+                type="text"
+                placeholder="John Doe"
+                className="w-full h-14 pl-6 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold"
+                onChange={handleChange}
+                required
+              />
             </motion.div>
 
-            {/* EMAIL */}
+            {/* EMAIL (as username) */}
             <motion.div variants={itemVariants} className="flex flex-col gap-2">
               <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">Email Address</label>
-              <div className="relative group">
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="name@company.com"
-                  className="w-full h-16 pl-2 pr-6 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <input
+                name="username"
+                type="email"
+                placeholder="name@company.com"
+                className="w-full h-14 pl-6 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold"
+                onChange={handleChange}
+                required
+              />
+            </motion.div>
+
+            {/* CITY */}
+            <motion.div variants={itemVariants} className="flex flex-col gap-2">
+              <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">City</label>
+              <input
+                name="city"
+                type="text"
+                placeholder="e.g. New York"
+                className="w-full h-14 pl-6 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold"
+                onChange={handleChange}
+                required
+              />
             </motion.div>
 
             {/* PASSWORD */}
             <motion.div variants={itemVariants} className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">Security Password</label>
+              <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#ec7f13] ml-1">Password</label>
               <div className="relative group">
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••••••"
-                  className="w-full h-16 pl-2 pr-14 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
+                  className="w-full h-14 pl-6 pr-14 bg-zinc-50 dark:bg-zinc-800/40 border-2 border-transparent focus:border-[#ec7f13]/30 focus:bg-white dark:focus:bg-zinc-800 rounded-2xl outline-none transition-all duration-300 text-sm font-semibold"
                   onChange={handleChange}
                   required
                 />
                 <button
-    type="button" // Important: prevents form submission
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#ec7f13] transition-colors"
-  >
-    <span className="material-symbols-outlined">
-      {showPassword ? 'visibility' : 'visibility_off'}
-    </span>
-  </button>
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#ec7f13] transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    {showPassword ? 'visibility' : 'visibility_off'}
+                  </span>
+                </button>
               </div>
             </motion.div>
 
-            {/* BUTTON */}
+            {/* SUBMIT BUTTON */}
             <motion.div variants={itemVariants} className="pt-4">
               <motion.button
                 whileHover={{ scale: 1.01 }}
@@ -145,7 +182,7 @@ const RegisterForm = () => {
               >
                 <AnimatePresence mode="wait">
                   {isLoading ? (
-                    <motion.div key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-6 h-6 border-3 border-current border-t-transparent rounded-full animate-spin" />
+                    <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <span className="flex items-center gap-2 uppercase tracking-widest text-xs">Create Account <span className="material-symbols-outlined">east</span></span>
                   )}
@@ -154,7 +191,7 @@ const RegisterForm = () => {
             </motion.div>
           </form>
 
-          <motion.p variants={itemVariants} className="mt-10 text-center text-sm text-zinc-500 font-medium">
+          <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-zinc-500 font-medium">
             Already a member? <a href="/login" className="text-[#ec7f13] font-black hover:underline underline-offset-4 ml-1">Sign In</a>
           </motion.p>
         </div>
